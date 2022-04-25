@@ -52,7 +52,7 @@
         android:id="@+id/spinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
+        android:layout_margin="8dp"
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
@@ -62,6 +62,18 @@
         android:orientation="vertical"
         android:layout_margin="8dp"
         app:layout_constraintTop_toBottomOf="@+id/spinner">
+
+        <EditText
+            android:id="@+id/dayLength"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="알고 싶은 기간의 날짜 수를 입력해주세요. (1일 이상)"
+            android:textSize="12dp"
+            android:layout_marginBottom="16dp"
+            android:background="@color/white"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:inputType="numberDecimal"/>
 
         <Button
             android:id="@+id/btn"

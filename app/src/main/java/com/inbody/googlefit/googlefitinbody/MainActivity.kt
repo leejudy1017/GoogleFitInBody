@@ -1,12 +1,14 @@
 package com.inbody.googlefit.googlefitinbody
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
 import com.inbody.googlefit.common.logger.Log
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
@@ -17,23 +19,15 @@ import com.google.android.gms.fitness.Fitness
 import com.google.android.gms.fitness.FitnessOptions
 import com.google.android.gms.fitness.data.*
 import com.google.android.gms.fitness.request.DataReadRequest
-import com.google.android.gms.fitness.request.SessionReadRequest
 import com.google.android.gms.fitness.result.DataReadResponse
-import com.google.android.gms.fitness.result.SessionReadResponse
 import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
-import com.inbody.googlefit.common.logger.LogView
 import com.inbody.googlefit.common.logger.LogWrapper
 import com.inbody.googlefit.common.logger.MessageOnlyLogFilter
 import com.inbody.googlefit.test.R
 import com.inbody.googlefit.test.databinding.ActivityMainBinding
 import kotlinx.android.synthetic.main.activity_main.*
 import java.text.DateFormat
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.*
@@ -54,92 +48,87 @@ class MainActivity : AppCompatActivity() {
             // ACTIVITY DATA
         .addDataType(DataType.TYPE_CALORIES_EXPENDED)
         .addDataType(DataType.TYPE_WEIGHT)
-        .addDataType(DataType.TYPE_POWER_SAMPLE)
+        //.addDataType(DataType.TYPE_POWER_SAMPLE)
         .addDataType(DataType.TYPE_NUTRITION)
         .addDataType(DataType.TYPE_HEIGHT)
         .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE)
         .addDataType(DataType.TYPE_HEART_RATE_BPM)
         .addDataType(DataType.TYPE_ACTIVITY_SEGMENT)
         .addDataType(DataType.TYPE_BASAL_METABOLIC_RATE)
-        .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA)
         .addDataType(DataType.TYPE_HYDRATION)
-        .addDataType(DataType.TYPE_LOCATION_SAMPLE)
+        //.addDataType(DataType.TYPE_LOCATION_SAMPLE)
         .addDataType(DataType.TYPE_HEART_POINTS)
         .addDataType(DataType.TYPE_SLEEP_SEGMENT)
-        .addDataType(DataType.TYPE_STEP_COUNT_CUMULATIVE)
+        //.addDataType(DataType.TYPE_STEP_COUNT_CUMULATIVE)
         .addDataType(DataType.TYPE_STEP_COUNT_DELTA)
-        .addDataType(DataType.TYPE_CYCLING_PEDALING_CADENCE)
-        .addDataType(DataType.TYPE_CYCLING_WHEEL_REVOLUTION)
-        .addDataType(DataType.TYPE_CYCLING_WHEEL_RPM)
+        //.addDataType(DataType.TYPE_CYCLING_PEDALING_CADENCE)
+        //.addDataType(DataType.TYPE_CYCLING_WHEEL_REVOLUTION)
+        //.addDataType(DataType.TYPE_CYCLING_WHEEL_RPM)
         .addDataType(DataType.TYPE_MOVE_MINUTES)
         .addDataType(DataType.TYPE_SPEED)
-        .addDataType(DataType.TYPE_STEP_COUNT_CADENCE)
-        .addDataType(DataType.TYPE_WORKOUT_EXERCISE)
+        //.addDataType(DataType.TYPE_STEP_COUNT_CADENCE)
+        //.addDataType(DataType.TYPE_WORKOUT_EXERCISE)
+
             // HEALTH DATA
         .addDataType(HealthDataTypes.TYPE_BLOOD_GLUCOSE)
         .addDataType(HealthDataTypes.TYPE_BLOOD_PRESSURE)
         .addDataType(HealthDataTypes.TYPE_BODY_TEMPERATURE)
-        .addDataType(HealthDataTypes.TYPE_CERVICAL_MUCUS)
-        .addDataType(HealthDataTypes.TYPE_CERVICAL_POSITION)
+        //.addDataType(HealthDataTypes.TYPE_CERVICAL_MUCUS)
+        //.addDataType(HealthDataTypes.TYPE_CERVICAL_POSITION)
         .addDataType(HealthDataTypes.TYPE_MENSTRUATION)
-        .addDataType(HealthDataTypes.TYPE_OVULATION_TEST)
+        //.addDataType(HealthDataTypes.TYPE_OVULATION_TEST)
         .addDataType(HealthDataTypes.TYPE_OXYGEN_SATURATION)
-        .addDataType(HealthDataTypes.TYPE_VAGINAL_SPOTTING)
+        //.addDataType(HealthDataTypes.TYPE_VAGINAL_SPOTTING)
         .build()
 
     enum class FitActionRequestCode {
         //Activity Data
         TYPE_CALORIES_EXPENDED, TYPE_WEIGHT, TYPE_POWER_SAMPLE,TYPE_NUTRITION,TYPE_HEIGHT,TYPE_BODY_FAT_PERCENTAGE
-        ,TYPE_HEART_RATE_BPM,TYPE_ACTIVITY_SEGMENT,TYPE_BASAL_METABOLIC_RATE,TYPE_DISTANCE_DELTA,TYPE_HYDRATION,TYPE_LOCATION_SAMPLE
-        ,TYPE_HEART_POINTS,TYPE_SLEEP_SEGMENT,TYPE_STEP_COUNT_CUMULATIVE,TYPE_STEP_COUNT_DELTA,TYPE_CYCLING_PEDALING_CADENCE
-        ,TYPE_CYCLING_WHEEL_REVOLUTION,TYPE_CYCLING_WHEEL_RPM,TYPE_MOVE_MINUTES,TYPE_SPEED,TYPE_STEP_COUNT_CADENCE,TYPE_WORKOUT_EXERCISE
+        ,TYPE_HEART_RATE_BPM,TYPE_ACTIVITY_SEGMENT,TYPE_BASAL_METABOLIC_RATE,TYPE_DISTANCE_DELTA,TYPE_HYDRATION
+        ,TYPE_HEART_POINTS,TYPE_SLEEP_SEGMENT,TYPE_STEP_COUNT_CUMULATIVE,TYPE_STEP_COUNT_DELTA
+        ,TYPE_MOVE_MINUTES,TYPE_SPEED,TYPE_STEP_COUNT_CADENCE
 
         //Health Data
-        ,TYPE_BLOOD_GLUCOSE,TYPE_BLOOD_PRESSURE,TYPE_BODY_TEMPERATURE,TYPE_CERVICAL_MUCUS,TYPE_CERVICAL_POSITION,TYPE_MENSTRUATION
-        ,TYPE_OVULATION_TEST,TYPE_OXYGEN_SATURATION,TYPE_VAGINAL_SPOTTING
+        ,TYPE_BLOOD_GLUCOSE,TYPE_BLOOD_PRESSURE,TYPE_BODY_TEMPERATURE,TYPE_MENSTRUATION,TYPE_OXYGEN_SATURATION
     }
 
     private val requestCodeArray = arrayListOf(
+
         //Activity Data
         FitActionRequestCode.TYPE_CALORIES_EXPENDED,
         FitActionRequestCode.TYPE_WEIGHT,
-        FitActionRequestCode.TYPE_POWER_SAMPLE,
+        //FitActionRequestCode.TYPE_POWER_SAMPLE,
         FitActionRequestCode.TYPE_NUTRITION,
         FitActionRequestCode.TYPE_HEIGHT,
-        FitActionRequestCode.TYPE_BODY_FAT_PERCENTAGE
-        ,
+        FitActionRequestCode.TYPE_BODY_FAT_PERCENTAGE,
         FitActionRequestCode.TYPE_HEART_RATE_BPM,
         FitActionRequestCode.TYPE_ACTIVITY_SEGMENT,
         FitActionRequestCode.TYPE_BASAL_METABOLIC_RATE,
         FitActionRequestCode.TYPE_DISTANCE_DELTA,
         FitActionRequestCode.TYPE_HYDRATION,
-        FitActionRequestCode.TYPE_LOCATION_SAMPLE
-        ,
+        //FitActionRequestCode.TYPE_LOCATION_SAMPLE,
         FitActionRequestCode.TYPE_HEART_POINTS,
         FitActionRequestCode.TYPE_SLEEP_SEGMENT,
-        FitActionRequestCode.TYPE_STEP_COUNT_CUMULATIVE,
+        //FitActionRequestCode.TYPE_STEP_COUNT_CUMULATIVE,
         FitActionRequestCode.TYPE_STEP_COUNT_DELTA,
-        FitActionRequestCode.TYPE_CYCLING_PEDALING_CADENCE
-        ,
-        FitActionRequestCode.TYPE_CYCLING_WHEEL_REVOLUTION,
-        FitActionRequestCode.TYPE_CYCLING_WHEEL_RPM,
+        //FitActionRequestCode.TYPE_CYCLING_PEDALING_CADENCE,
+        //FitActionRequestCode.TYPE_CYCLING_WHEEL_REVOLUTION,
+        //FitActionRequestCode.TYPE_CYCLING_WHEEL_RPM,
         FitActionRequestCode.TYPE_MOVE_MINUTES,
         FitActionRequestCode.TYPE_SPEED,
         FitActionRequestCode.TYPE_STEP_COUNT_CADENCE,
-        FitActionRequestCode.TYPE_WORKOUT_EXERCISE
+        //FitActionRequestCode.TYPE_WORKOUT_EXERCISE,
 
         //Health Data
-        ,
         FitActionRequestCode.TYPE_BLOOD_GLUCOSE,
         FitActionRequestCode.TYPE_BLOOD_PRESSURE,
         FitActionRequestCode.TYPE_BODY_TEMPERATURE,
-        FitActionRequestCode.TYPE_CERVICAL_MUCUS,
-        FitActionRequestCode.TYPE_CERVICAL_POSITION,
-        FitActionRequestCode.TYPE_MENSTRUATION
-        ,
-        FitActionRequestCode.TYPE_OVULATION_TEST,
+        //FitActionRequestCode.TYPE_CERVICAL_MUCUS,
+        //FitActionRequestCode.TYPE_CERVICAL_POSITION,
+        FitActionRequestCode.TYPE_MENSTRUATION,
+        //FitActionRequestCode.TYPE_OVULATION_TEST,
         FitActionRequestCode.TYPE_OXYGEN_SATURATION,
-        FitActionRequestCode.TYPE_VAGINAL_SPOTTING
+        //FitActionRequestCode.TYPE_VAGINAL_SPOTTING
     )
 
     var requestCode = requestCodeArray[0]
@@ -167,55 +156,31 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        //range
-        val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-        val now = Date()
-        calendar.time = now
-
-        endTime = calendar.timeInMillis
-        calendar.add(Calendar.WEEK_OF_YEAR, -1)
-        startTime = calendar.timeInMillis
-
-
         binding.btn.setOnClickListener{
-            Log.i(TAG, "Start Date: ${dateFormat.format(startTime)}")
-            Log.i(TAG, "End Date: ${dateFormat.format(endTime)}")
 
-            clearLogView()
-            initializeLogging()
-            checkPermissionsAndRun(fitActionRequestCode = requestCode)
+            binding.dayLength.clearFocus()
+            keyboardHide()
+
+            if(binding.dayLength.text.isNotEmpty() && Integer.parseInt(binding.dayLength.text.toString())>0){
+
+
+                //range
+                val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+                val now = Date()
+                calendar.time = now
+
+                endTime = calendar.timeInMillis
+                var temp = Integer.parseInt(binding.dayLength.text.toString())*(-1)
+                calendar.add(Calendar.DAY_OF_WEEK,temp)
+                startTime = calendar.timeInMillis
+
+                clearLogView()
+                initializeLogging()
+                Log.i(TAG, "Start Date: ${dateFormat.format(startTime)}")
+                Log.i(TAG, "End Date: ${dateFormat.format(endTime)}")
+                checkPermissionsAndRun(fitActionRequestCode = requestCode)
         }
-
-       /*
-
-       val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-       val now = Date()
-       calendar.time = now
-
-
-       binding.btn.setOnClickListener{
-
-           //end 설정
-           calendar.set(Calendar.DAY_OF_MONTH,binding.datePicker.dayOfMonth)
-           calendar.set(Calendar.MONTH,binding.datePicker.month-1)
-           calendar.set(Calendar.YEAR,binding.datePicker.year)
-           calendar.set(Calendar.HOUR,binding.timePicker.currentHour)
-           calendar.set(Calendar.MINUTE,binding.timePicker.currentMinute)
-
-           endTime = binding.datePicker.year*31557600000 + binding.datePicker.monthbinding.timePicker.currentHour*3600000 + binding.timePicker.currentMinute*600000
-           calendar.add(Calendar.WEEK_OF_YEAR, -1)
-           startTime = calendar.timeInMillis
-
-           Log.i(TAG, "Start Date: ${dateFormat.format(startTime)}")
-           Log.i(TAG, "End Date: ${dateFormat.format(endTime)}")
-
-           checkPermissionsAndRun(fitActionRequestCode = FitActionRequestCode.TYPE_CALORIES_EXPENDED)
-
-
-
-       }
-
-        */
+        }
 
     }
 
@@ -303,7 +268,7 @@ class MainActivity : AppCompatActivity() {
 
         FitActionRequestCode.TYPE_CALORIES_EXPENDED -> typeCaloriesExpended()
         FitActionRequestCode.TYPE_WEIGHT -> typeWeight()
-        FitActionRequestCode.TYPE_POWER_SAMPLE -> typePowerSample()
+        //FitActionRequestCode.TYPE_POWER_SAMPLE -> typePowerSample()
         FitActionRequestCode.TYPE_NUTRITION -> typeNutrition()
         FitActionRequestCode.TYPE_HEIGHT -> typeHeight()
         FitActionRequestCode.TYPE_BODY_FAT_PERCENTAGE -> typeBodyFat()
@@ -312,28 +277,28 @@ class MainActivity : AppCompatActivity() {
         FitActionRequestCode.TYPE_BASAL_METABOLIC_RATE -> typeBasalMetabolicRate()
         FitActionRequestCode.TYPE_DISTANCE_DELTA -> typeDistance()
         FitActionRequestCode.TYPE_HYDRATION -> typeHydration()
-        FitActionRequestCode.TYPE_LOCATION_SAMPLE -> typeLocation()
+        //FitActionRequestCode.TYPE_LOCATION_SAMPLE -> typeLocation()
         FitActionRequestCode.TYPE_HEART_POINTS -> typeHeartPoints()
         FitActionRequestCode.TYPE_SLEEP_SEGMENT -> typeSleep()
-        FitActionRequestCode.TYPE_STEP_COUNT_CUMULATIVE -> typeStepCountCumulative()
+        //FitActionRequestCode.TYPE_STEP_COUNT_CUMULATIVE -> typeStepCountCumulative()
         FitActionRequestCode.TYPE_STEP_COUNT_DELTA -> typeStepCount()
-        FitActionRequestCode.TYPE_CYCLING_PEDALING_CADENCE -> typeCyclingPedalingCadence()
-        FitActionRequestCode.TYPE_CYCLING_WHEEL_REVOLUTION -> typeCyclingWheelRevolution()
-        FitActionRequestCode.TYPE_CYCLING_WHEEL_RPM -> typeCyclingWheelRPM()
+        //FitActionRequestCode.TYPE_CYCLING_PEDALING_CADENCE -> typeCyclingPedalingCadence()
+        //FitActionRequestCode.TYPE_CYCLING_WHEEL_REVOLUTION -> typeCyclingWheelRevolution()
+        //FitActionRequestCode.TYPE_CYCLING_WHEEL_RPM -> typeCyclingWheelRPM()
         FitActionRequestCode.TYPE_MOVE_MINUTES -> typeMoveMinutes()
         FitActionRequestCode.TYPE_SPEED -> typeSpeed()
-        FitActionRequestCode.TYPE_STEP_COUNT_CADENCE -> typeStepCountCadence()
-        FitActionRequestCode.TYPE_WORKOUT_EXERCISE -> typeWorkoutExercise()
+        //FitActionRequestCode.TYPE_STEP_COUNT_CADENCE -> typeStepCountCadence()
+        //FitActionRequestCode.TYPE_WORKOUT_EXERCISE -> typeWorkoutExercise()
 
         FitActionRequestCode.TYPE_BLOOD_GLUCOSE -> typeBloodGlucose()
         FitActionRequestCode.TYPE_BLOOD_PRESSURE -> typeBloodPressure()
         FitActionRequestCode.TYPE_BODY_TEMPERATURE -> typeBodyTemperature()
-        FitActionRequestCode.TYPE_CERVICAL_MUCUS -> typeCervicalMucus()
-        FitActionRequestCode.TYPE_CERVICAL_POSITION -> typeCervicalPostion()
+        //FitActionRequestCode.TYPE_CERVICAL_MUCUS -> typeCervicalMucus()
+        //FitActionRequestCode.TYPE_CERVICAL_POSITION -> typeCervicalPosition()
         FitActionRequestCode.TYPE_MENSTRUATION -> typeMenstration()
-        FitActionRequestCode.TYPE_OVULATION_TEST -> typeOvulationTest()
+        //FitActionRequestCode.TYPE_OVULATION_TEST -> typeOvulationTest()
         FitActionRequestCode.TYPE_OXYGEN_SATURATION -> typeOxygenSaturation()
-        FitActionRequestCode.TYPE_VAGINAL_SPOTTING -> typeVaginalSpotting()
+        //FitActionRequestCode.TYPE_VAGINAL_SPOTTING -> typeVaginalSpotting()
 
         else -> {}
     }
@@ -370,9 +335,62 @@ class MainActivity : AppCompatActivity() {
             Log.i(TAG, "\tStart: ${dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS))} | ${dp.getStartTimeString()}")
             Log.i(TAG, "\tEnd: ${dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS))} | ${dp.getEndTimeString()}")
             for (field in dp.dataType.fields) {
-                Log.i(TAG, "\tField: ${field.name} |  Value: ${dp.getValue(field)}")
+                Log.i(TAG, addUnit(field.name,dp.getValue(field)))
             }
         }
+    }
+
+    private fun addUnit(field: String, value: Value): String {
+        var unit =""
+
+        when(field){
+            "calories" -> unit = "kcal"
+            "weight" -> unit = "kg"
+            "power" -> unit = "watt"
+            "nutrients" -> {
+                //
+            }
+            "meal_type" -> {
+                when(Integer.parseInt(value.toString())){
+                    1 -> unit = "(unknown)"
+                    2 -> unit = "(breakfast)"
+                    3 -> unit = "(lunch)"
+                    4 -> unit = "(dinner)"
+                    5 -> unit = "(snack)"
+                }
+            }
+            "height" -> unit = "m"
+            "percentage" -> unit = "%"
+            "bpm" -> unit = "bpm"
+            "distance" -> unit = "m"
+            "volume" -> unit = "L"
+            "intensity" -> unit = "Pts"
+            "steps" -> unit = "steps"
+            "duration" -> unit = "millisecond"
+            "speed" -> unit = "m"
+            "blood_glucose_level" -> unit = "mmol/L"
+            "body_position" -> {
+                when(Integer.parseInt(value.toString())){
+                    1 -> unit = "(unknown)"
+                    2 -> unit = "(breakfast)"
+                    3 -> unit = "(lunch)"
+                    4 -> unit = "(dinner)"
+                    5 -> unit = "(snack)"
+                }
+            }
+            "menstrual_flow" -> {
+                when(Integer.parseInt(value.toString())){
+                    1 -> unit = "(spotting)"
+                    2 -> unit = "(light)"
+                    3 -> unit = "(medium)"
+                    4 -> unit = "(heavy)"
+                }
+            }
+            "supplemental_oxygen_flow_rate" -> unit="%"
+
+            }
+
+        return "Field: $field |  Value: $value $unit"
     }
 
 
@@ -385,7 +403,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeCaloriesExpended(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(DataType.TYPE_CALORIES_EXPENDED)
+            //.aggregate(DataType.TYPE_CALORIES_EXPENDED)
+            .read(DataType.TYPE_CALORIES_EXPENDED)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -397,7 +416,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeWeight(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(DataType.TYPE_WEIGHT)
+            //.aggregate(DataType.TYPE_WEIGHT)
+            .read(DataType.TYPE_WEIGHT)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -409,8 +429,8 @@ class MainActivity : AppCompatActivity() {
     private fun typePowerSample(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(DataType.TYPE_POWER_SAMPLE)
-            .read(DataType.AGGREGATE_POWER_SUMMARY)
+            //.aggregate(DataType.TYPE_POWER_SAMPLE)
+            .read(DataType.TYPE_POWER_SAMPLE)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -422,7 +442,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeNutrition(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(DataType.TYPE_NUTRITION)
+            //.aggregate(DataType.TYPE_NUTRITION)
+            .read(DataType.TYPE_NUTRITION)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -434,7 +455,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeHeight(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(DataType.TYPE_HEIGHT)
+            //.aggregate(DataType.TYPE_HEIGHT)
+            .read(DataType.TYPE_HEIGHT)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -446,7 +468,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeBodyFat(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(DataType.TYPE_BODY_FAT_PERCENTAGE)
+            //.aggregate(DataType.TYPE_BODY_FAT_PERCENTAGE)
+            .read(DataType.TYPE_BODY_FAT_PERCENTAGE)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -458,7 +481,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeHeartRate(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(DataType.TYPE_HEART_RATE_BPM)
+            //.aggregate(DataType.TYPE_HEART_RATE_BPM)
+            .read(DataType.TYPE_HEART_RATE_BPM)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -470,7 +494,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeActivity(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(DataType.TYPE_ACTIVITY_SEGMENT)
+            //.aggregate(DataType.TYPE_ACTIVITY_SEGMENT)
+            .read(DataType.TYPE_ACTIVITY_SEGMENT)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -482,7 +507,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeBasalMetabolicRate(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(DataType.TYPE_BASAL_METABOLIC_RATE)
+            //.aggregate(DataType.TYPE_BASAL_METABOLIC_RATE)
+            .read(DataType.TYPE_BASAL_METABOLIC_RATE)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -494,7 +520,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeDistance(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(DataType.TYPE_DISTANCE_DELTA)
+            //.aggregate(DataType.TYPE_DISTANCE_DELTA)
+            .read(DataType.TYPE_DISTANCE_DELTA)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -506,7 +533,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeHydration(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(DataType.TYPE_HYDRATION)
+            //.aggregate(DataType.TYPE_HYDRATION)
+            .read(DataType.TYPE_HYDRATION)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -518,7 +546,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeLocation(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(DataType.TYPE_LOCATION_SAMPLE)
+            //.aggregate(DataType.TYPE_LOCATION_SAMPLE)
+            .read(DataType.TYPE_LOCATION_SAMPLE)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -530,7 +559,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeHeartPoints(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(DataType.TYPE_HEART_POINTS)
+            //.aggregate(DataType.TYPE_HEART_POINTS)
+            .read(DataType.TYPE_HEART_POINTS)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -566,7 +596,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeStepCount(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(DataType.TYPE_STEP_COUNT_DELTA)
+            //.aggregate(DataType.TYPE_STEP_COUNT_DELTA)
+            .read(DataType.TYPE_STEP_COUNT_DELTA)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -614,7 +645,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeMoveMinutes(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(DataType.TYPE_MOVE_MINUTES)
+            //.aggregate(DataType.TYPE_MOVE_MINUTES)
+            .read(DataType.TYPE_MOVE_MINUTES)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -626,7 +658,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeSpeed(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(DataType.TYPE_SPEED)
+            //.aggregate(DataType.TYPE_SPEED)
+            .read(DataType.TYPE_SPEED)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -662,7 +695,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeBloodGlucose(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(HealthDataTypes.TYPE_BLOOD_GLUCOSE)
+            //.aggregate(HealthDataTypes.TYPE_BLOOD_GLUCOSE)
+            .read(HealthDataTypes.TYPE_BLOOD_GLUCOSE)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -674,7 +708,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeBloodPressure(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(HealthDataTypes.TYPE_BLOOD_PRESSURE)
+            //.aggregate(HealthDataTypes.TYPE_BLOOD_PRESSURE)
+            .read(HealthDataTypes.TYPE_BLOOD_PRESSURE)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -686,7 +721,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeBodyTemperature(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(HealthDataTypes.TYPE_BODY_TEMPERATURE)
+            //.aggregate(HealthDataTypes.TYPE_BODY_TEMPERATURE)
+            .read(HealthDataTypes.TYPE_BODY_TEMPERATURE)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -746,7 +782,8 @@ class MainActivity : AppCompatActivity() {
     private fun typeOxygenSaturation(): Task<DataReadResponse>{
 
         val readRequest = DataReadRequest.Builder()
-            .aggregate(HealthDataTypes.TYPE_OXYGEN_SATURATION)
+            //.aggregate(HealthDataTypes.TYPE_OXYGEN_SATURATION)
+            .read(HealthDataTypes.TYPE_OXYGEN_SATURATION)
             .bucketByTime(1, TimeUnit.DAYS)
             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
             .build()
@@ -785,6 +822,12 @@ class MainActivity : AppCompatActivity() {
         msgFilter.next = logView
         Log.i(TAG, "Ready.")
 
+    }
+
+    /** Keyboard Hide */
+    fun keyboardHide(){
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(binding.dayLength.windowToken,0)
     }
 
 }
